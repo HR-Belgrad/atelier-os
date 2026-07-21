@@ -1,3 +1,4 @@
+import { Inspector } from './components/Inspector';
 import { useState } from 'react';
 import { GraphView } from './components/GraphView';
 import { useRepository } from './hooks/useRepository';
@@ -54,7 +55,9 @@ const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
       total + object.links.length + object.relations.length,
     0,
   );
-
+const selectedObject =
+  objects.find((object) => object.id === selectedObjectId) ?? null;
+  
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -129,12 +132,16 @@ const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
         )}
 
         {active === 'Graph' ? (
-          <GraphView
-  objects={objects}
-  selectedObjectId={selectedObjectId}
-  onSelectObject={setSelectedObjectId}
-/>
-        ) : (
+  <div className="graph-layout">
+    <GraphView
+      objects={objects}
+      selectedObjectId={selectedObjectId}
+      onSelectObject={setSelectedObjectId}
+    />
+
+    <Inspector object={selectedObject} />
+  </div>
+) : (
           <div className="dashboard-grid">
             <section className="hero panel">
               <p className="eyebrow">
