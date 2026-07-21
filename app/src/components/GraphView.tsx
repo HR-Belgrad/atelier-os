@@ -1,7 +1,7 @@
-import { GraphLayout } from "../engine/graph/GraphLayout";
 import { useMemo } from 'react';
 
 import { GraphBuilder } from '../engine/graph/GraphBuilder';
+import { GraphLayout } from '../engine/graph/GraphLayout';
 import type { BaseObject } from '../engine/models/BaseObject';
 
 interface GraphViewProps {
@@ -21,16 +21,36 @@ export function GraphView({
   );
 
   const positionedGraph = useMemo(
-  () => new GraphLayout().layout(graph),
-  [graph],
-);
+    () => new GraphLayout().layout(graph),
+    [graph],
+  );
 
-const positionedNodes = positionedGraph.nodes;
+  const positionedNodes = positionedGraph.nodes;
 
   const nodeById = useMemo(
     () => new Map(positionedNodes.map((node) => [node.id, node])),
     [positionedNodes],
   );
+
+  const connectedNodeIds = useMemo(() => {
+    const connectedIds = new Set<string>();
+
+    if (!selectedObjectId) {
+      return connectedIds;
+    }
+
+    for (const edge of graph.edges) {
+      if (edge.source === selectedObjectId) {
+        connectedIds.add(edge.target);
+      }
+
+      if (edge.target === selectedObjectId) {
+        connectedIds.add(edge.source);
+      }
+    }
+
+    return connectedIds;
+  }, [graph.edges, selectedObjectId]);
 
   if (objects.length === 0) {
     return (
@@ -88,39 +108,63 @@ const positionedNodes = positionedGraph.nodes;
         })}
 
         {positionedNodes.map((node) => {
-  const isSelected = selectedObjectId === node.id;
+          const isSelected = selectedObjectId === node.id;
+          const isConnected = connectedNodeIds.has(node.id);
 
-  return (
-    <g
-      key={node.id}
-      className={`graph-node ${node.type} ${
-        isSelected ? 'selected' : ''
-      }`}
-      transform={`translate(${node.x} ${node.y})`}
-      onClick={() => onSelectObject(node.id)}
-      style={{ cursor: 'pointer' }}
-      role="button"
-      tabIndex={0}
-      aria-label={`${node.label} auswählen`}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onSelectObject(node.id);
-        }
-      }}
-    >
-      <circle
-        r={node.type === 'work' ? 42 : 31}
-        stroke={isSelected ? '#FE5A5D' : undefined}
-        strokeWidth={isSelected ? 4 : undefined}
-      />
+          const isDimmed =
+            selectedObjectId !== null &&
+            !isSelected &&
+            !isConnected;
 
-      <text textAnchor="middle" dy="4">
-        {node.label}
-      </text>
-    </g>
-  );
-})}
+          return (
+            <g
+              key={node.id}
+              className={`graph-node ${node.type} ${
+                isSelected ? 'selected' : ''
+              } ${isConnected ? 'connected' : ''} ${
+                isDimmed ? 'dimmed' : ''
+              }`}
+              transform={`translate(${node.x} ${node.y})`}
+              onClick={() => onSelectObject(node.id)}
+              style={{
+                cursor: 'pointer',
+                opacity: isDimmed ? 0.35 : 1,
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${node.label} auswählen`}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onSelectObject(node.id);
+                }
+              }}
+            >
+              <circle
+                r={node.type === 'work' ? 42 : 31}
+                fill={isDimmed ? '#f3f3f3' : undefined}
+                stroke={
+                  isSelected
+                    ? '#FE5A5D'
+                    : isConnected
+                      ? '#5B19DA'
+                      : undefined
+                }
+                strokeWidth={
+                  isSelected
+                    ? 4
+                    : isConnected
+                      ? 3
+                      : undefined
+                }
+              />
+
+              <text textAnchor="middle" dy="4">
+                {node.label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
     </section>
   );
