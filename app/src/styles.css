@@ -52,3 +52,37 @@ h2 { font-size: 23px; letter-spacing: -.03em; }
 .graph-node.song circle { stroke: #78d6ab; }
 .graph-node text { fill: #f5f5f2; font-size: 12px; pointer-events: none; }
 @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } .graph-panel, .recent { grid-column: 1; } .graph-panel { grid-row: auto; } }
+.graph-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.graph-layout .graph-panel {
+  min-width: 0;
+}
+
+.graph-layout .panel {
+  height: fit-content;
+}
+
+.panel dl {
+  margin: 0;
+}
+
+.panel dt {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.panel dt:first-child {
+  margin-top: 0;
+}
+
+.panel dd {
+  margin: 0.25rem 0 0;
+  color: #666;
+  word-break: break-word;
+}
