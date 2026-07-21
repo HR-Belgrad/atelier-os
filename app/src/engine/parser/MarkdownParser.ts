@@ -5,7 +5,8 @@ import type {
   AtelierObjectType,
   AtelierRelation,
   BaseObject,
-} from "../../models/BaseObject";
+} from "../models/BaseObject";
+import { isRelationType } from "../ontology/RelationType";
 
 export interface MarkdownParseInput {
   content: string;
@@ -23,12 +24,15 @@ export interface MarkdownParseResult {
 const KNOWN_TYPES = new Set<AtelierObjectType>([
   "work",
   "scene",
+  "chapter",
   "song",
   "album",
+  "lyric",
   "figure",
   "motif",
   "sound",
   "synth",
+  "effect",
   "knowledge",
   "decision",
   "idea",
@@ -128,13 +132,14 @@ export class MarkdownParser {
   }
 
   /**
-   * Intentionally small YAML subset for Atelier metadata:
+   * Kleine YAML-Teilmenge für Atelier-Metadaten:
    * - key: value
-   * - arrays written as [a, b]
-   * - list blocks using "- item"
-   * - nested relation objects
+   * - Arrays als [a, b]
+   * - Listen mit "- item"
+   * - verschachtelte Relationsobjekte
    *
-   * A full YAML library can replace this later without changing parse().
+   * Später kann eine vollständige YAML-Bibliothek eingesetzt werden,
+   * ohne die öffentliche parse()-Methode zu verändern.
    */
   private parseSimpleYaml(source: string): Record<string, unknown> {
     const result: Record<string, unknown> = {};
@@ -161,9 +166,11 @@ export class MarkdownParser {
 
         if (itemSource.includes(":")) {
           const [key, ...rest] = itemSource.split(":");
+
           currentObject = {
             [key.trim()]: this.parseScalar(rest.join(":").trim()),
           };
+
           currentList.push(currentObject);
         } else {
           currentList.push(this.parseScalar(itemSource));
@@ -175,7 +182,11 @@ export class MarkdownParser {
 
       if (indentation > 0 && currentObject && line.includes(":")) {
         const [key, ...rest] = line.split(":");
-        currentObject[key.trim()] = this.parseScalar(rest.join(":").trim());
+
+        currentObject[key.trim()] = this.parseScalar(
+          rest.join(":").trim(),
+        );
+
         continue;
       }
 
@@ -261,10 +272,15 @@ export class MarkdownParser {
     return "unknown";
   }
 
-  private parseStatus(value: unknown): AtelierObjectStatus | undefined {
+  private parseStatus(
+    value: unknown,
+  ): AtelierObjectStatus | undefined {
     const normalized = this.readString(value)?.toLowerCase();
 
-    if (normalized && KNOWN_STATUSES.has(normalized as AtelierObjectStatus)) {
+    if (
+      normalized &&
+      KNOWN_STATUSES.has(normalized as AtelierObjectStatus)
+    ) {
       return normalized as AtelierObjectStatus;
     }
 
@@ -291,13 +307,21 @@ export class MarkdownParser {
       }
 
       const relation = item as Record<string, unknown>;
+
       const type = this.readString(relation.type);
+
       const targetId =
         this.readString(relation.targetId) ??
         this.readString(relation.target) ??
         this.readString(relation.id);
 
+      const label = this.readString(relation.label);
+
       if (!type || !targetId) {
+        return [];
+      }
+
+      if (!isRelationType(type)) {
         return [];
       }
 
@@ -305,7 +329,7 @@ export class MarkdownParser {
         {
           type,
           targetId,
-          label: this.readString(relation.label),
+          label,
         },
       ];
     });
@@ -313,7 +337,8 @@ export class MarkdownParser {
 
   private extractWikiLinks(content: string): string[] {
     const links = new Set<string>();
-    const pattern = /\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g;
+    const pattern =
+      /\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g;
 
     for (const match of content.matchAll(pattern)) {
       const target = match[1]?.trim();
@@ -332,7 +357,10 @@ export class MarkdownParser {
   }
 
   private titleFromPath(relativePath: string): string {
-    const filename = path.basename(relativePath, path.extname(relativePath));
+    const filename = path.basename(
+      relativePath,
+      path.extname(relativePath),
+    );
 
     return filename
       .replace(/[-_]+/g, " ")

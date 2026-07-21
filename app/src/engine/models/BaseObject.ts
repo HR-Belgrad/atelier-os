@@ -1,19 +1,8 @@
-export type AtelierObjectType =
-  | "work"
-  | "scene"
-  | "song"
-  | "album"
-  | "figure"
-  | "motif"
-  | "sound"
-  | "synth"
-  | "knowledge"
-  | "decision"
-  | "idea"
-  | "location"
-  | "tool"
-  | "reference"
-  | "unknown";
+import type { ObjectType } from "../ontology/ObjectType";
+import type { Relation } from "./Relation";
+
+export type AtelierObjectType = ObjectType;
+export type AtelierRelation = Relation;
 
 export type AtelierObjectStatus =
   | "idea"
@@ -24,15 +13,9 @@ export type AtelierObjectStatus =
   | "canonical"
   | "published";
 
-export interface AtelierRelation {
-  type: string;
-  targetId: string;
-  label?: string;
-}
-
 export interface BaseObject {
   id: string;
-  type: AtelierObjectType;
+  type: ObjectType;
   title: string;
   path: string;
 
@@ -42,7 +25,7 @@ export interface BaseObject {
   tags: string[];
   aliases: string[];
   links: string[];
-  relations: AtelierRelation[];
+  relations: Relation[];
 
   createdAt?: string;
   modifiedAt?: string;
@@ -66,7 +49,22 @@ export function isBaseObject(value: unknown): value is BaseObject {
     Array.isArray(object.aliases) &&
     Array.isArray(object.links) &&
     Array.isArray(object.relations) &&
+    object.relations.every(isRelation) &&
     typeof object.metadata === "object" &&
     object.metadata !== null
+  );
+}
+
+function isRelation(value: unknown): value is Relation {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const relation = value as Partial<Relation>;
+
+  return (
+    typeof relation.type === "string" &&
+    typeof relation.targetId === "string" &&
+    (relation.label === undefined || typeof relation.label === "string")
   );
 }

@@ -1,7 +1,7 @@
 import type {
   AtelierObjectType,
   BaseObject,
-} from "../models/BaseObject";
+} from "../engine/models/BaseObject";
 
 export interface ObjectStoreQuery {
   type?: AtelierObjectType;

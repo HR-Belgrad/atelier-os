@@ -1,4 +1,4 @@
-import type { BaseObject } from "../../models/BaseObject";
+import type { BaseObject } from "../models/BaseObject";
 
 export interface GraphNode {
   id: string;

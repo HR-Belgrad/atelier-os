@@ -1,4 +1,4 @@
-import type { BaseObject } from '../models/BaseObject';
+import type { BaseObject } from '../engine/models/BaseObject';
 
 export interface OpenRepositorySuccess {
   canceled: false;

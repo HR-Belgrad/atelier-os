@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import type { BaseObject } from '../models/BaseObject';
+import type { BaseObject } from '../engine/models/BaseObject';
 import type { OpenRepositorySuccess } from '../types/repository';
 
 export interface RepositoryState {
