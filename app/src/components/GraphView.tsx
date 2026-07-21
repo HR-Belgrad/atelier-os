@@ -1,3 +1,4 @@
+import { GraphLayout } from "../engine/graph/GraphLayout";
 import { useMemo } from 'react';
 
 import { GraphBuilder } from '../engine/graph/GraphBuilder';
@@ -13,21 +14,12 @@ export function GraphView({ objects }: GraphViewProps) {
     [objects],
   );
 
-  const positionedNodes = useMemo(
-    () =>
-      graph.nodes.map((node, index) => {
-        const columns = 4;
-        const column = index % columns;
-        const row = Math.floor(index / columns);
+  const positionedGraph = useMemo(
+  () => new GraphLayout().layout(graph),
+  [graph],
+);
 
-        return {
-          ...node,
-          x: 100 + column * 170,
-          y: 80 + row * 120,
-        };
-      }),
-    [graph.nodes],
-  );
+const positionedNodes = positionedGraph.nodes;
 
   const nodeById = useMemo(
     () => new Map(positionedNodes.map((node) => [node.id, node])),
