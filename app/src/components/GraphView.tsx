@@ -89,23 +89,34 @@ export function GraphView({
         aria-label="Atelier Wissensgraph"
       >
         {graph.edges.map((edge) => {
-          const source = nodeById.get(edge.source);
-          const target = nodeById.get(edge.target);
+  const source = nodeById.get(edge.source);
+  const target = nodeById.get(edge.target);
 
-          if (!source || !target) {
-            return null;
-          }
+  if (!source || !target) {
+    return null;
+  }
 
-          return (
-            <line
-              key={edge.id}
-              x1={source.x}
-              y1={source.y}
-              x2={target.x}
-              y2={target.y}
-            />
-          );
-        })}
+  const isHighlighted =
+    selectedObjectId !== null &&
+    (edge.source === selectedObjectId ||
+      edge.target === selectedObjectId);
+
+  const isDimmed =
+    selectedObjectId !== null && !isHighlighted;
+
+  return (
+    <line
+      key={edge.id}
+      x1={source.x}
+      y1={source.y}
+      x2={target.x}
+      y2={target.y}
+      stroke={isHighlighted ? "#5B19DA" : "#BDBDBD"}
+      strokeWidth={isHighlighted ? 3 : 1.5}
+      opacity={isDimmed ? 0.2 : 1}
+    />
+  );
+})}
 
         {positionedNodes.map((node) => {
           const isSelected = selectedObjectId === node.id;
