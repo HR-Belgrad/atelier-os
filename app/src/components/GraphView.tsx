@@ -1,11 +1,56 @@
-import type { BaseObject } from "../engine/models/BaseObject";
-import { graphEdges, graphNodes } from '../data/mock';
+import { useMemo } from 'react';
+
+import { GraphBuilder } from '../engine/graph/GraphBuilder';
+import type { BaseObject } from '../engine/models/BaseObject';
 
 interface GraphViewProps {
   objects: BaseObject[];
 }
+
 export function GraphView({ objects }: GraphViewProps) {
-  const byId = new Map(graphNodes.map((node) => [node.id, node]));
+  const graph = useMemo(
+    () => new GraphBuilder().build(objects),
+    [objects],
+  );
+
+  const positionedNodes = useMemo(
+    () =>
+      graph.nodes.map((node, index) => {
+        const columns = 4;
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+
+        return {
+          ...node,
+          x: 100 + column * 170,
+          y: 80 + row * 120,
+        };
+      }),
+    [graph.nodes],
+  );
+
+  const nodeById = useMemo(
+    () => new Map(positionedNodes.map((node) => [node.id, node])),
+    [positionedNodes],
+  );
+
+  if (objects.length === 0) {
+    return (
+      <section className="panel graph-panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Wissensgraph</p>
+            <h2>Beziehungen sichtbar machen</h2>
+          </div>
+        </div>
+
+        <p>
+          Öffne zuerst ein Repository, um den Wissensgraphen anzuzeigen.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="panel graph-panel">
       <div className="panel-heading">
@@ -13,18 +58,48 @@ export function GraphView({ objects }: GraphViewProps) {
           <p className="eyebrow">Wissensgraph</p>
           <h2>Beziehungen sichtbar machen</h2>
         </div>
-        <button className="ghost-button">Filter</button>
+
+        <span>
+          {graph.nodes.length} Objekte · {graph.edges.length} Beziehungen
+        </span>
       </div>
-      <svg className="graph" viewBox="0 0 700 360" role="img" aria-label="Atelier Wissensgraph">
-        {graphEdges.map(([sourceId, targetId]) => {
-          const source = byId.get(sourceId)!;
-          const target = byId.get(targetId)!;
-          return <line key={`${sourceId}-${targetId}`} x1={source.x} y1={source.y} x2={target.x} y2={target.y} />;
+
+      <svg
+        className="graph"
+        viewBox="0 0 700 360"
+        role="img"
+        aria-label="Atelier Wissensgraph"
+      >
+        {graph.edges.map((edge) => {
+          const source = nodeById.get(edge.source);
+          const target = nodeById.get(edge.target);
+
+          if (!source || !target) {
+            return null;
+          }
+
+          return (
+            <line
+              key={edge.id}
+              x1={source.x}
+              y1={source.y}
+              x2={target.x}
+              y2={target.y}
+            />
+          );
         })}
-        {graphNodes.map((node) => (
-          <g key={node.id} className={`graph-node ${node.type}`} transform={`translate(${node.x} ${node.y})`}>
-            <circle r={node.id === 'work' ? 42 : 31} />
-            <text textAnchor="middle" dy="4">{node.label}</text>
+
+        {positionedNodes.map((node) => (
+          <g
+            key={node.id}
+            className={`graph-node ${node.type}`}
+            transform={`translate(${node.x} ${node.y})`}
+          >
+            <circle r={node.type === 'work' ? 42 : 31} />
+
+            <text textAnchor="middle" dy="4">
+              {node.label}
+            </text>
           </g>
         ))}
       </svg>
