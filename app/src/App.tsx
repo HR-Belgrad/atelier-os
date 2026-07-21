@@ -21,6 +21,7 @@ const sections: Section[] = [
 
 export default function App() {
   const [active, setActive] = useState<Section>('Dashboard');
+const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
   const {
     repository,
@@ -128,7 +129,11 @@ export default function App() {
         )}
 
         {active === 'Graph' ? (
-          <GraphView objects={objects} />
+          <GraphView
+  objects={objects}
+  selectedObjectId={selectedObjectId}
+  onSelectObject={setSelectedObjectId}
+/>
         ) : (
           <div className="dashboard-grid">
             <section className="hero panel">
@@ -211,7 +216,11 @@ export default function App() {
               )}
             </section>
 
-            <GraphView objects={objects} />
+            <GraphView
+  objects={objects}
+  selectedObjectId={selectedObjectId}
+  onSelectObject={setSelectedObjectId}
+/>
           </div>
         )}
       </main>

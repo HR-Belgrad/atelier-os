@@ -6,9 +6,15 @@ import type { BaseObject } from '../engine/models/BaseObject';
 
 interface GraphViewProps {
   objects: BaseObject[];
+  selectedObjectId: string | null;
+  onSelectObject: (id: string) => void;
 }
 
-export function GraphView({ objects }: GraphViewProps) {
+export function GraphView({
+  objects,
+  selectedObjectId,
+  onSelectObject,
+}: GraphViewProps) {
   const graph = useMemo(
     () => new GraphBuilder().build(objects),
     [objects],
@@ -81,19 +87,40 @@ const positionedNodes = positionedGraph.nodes;
           );
         })}
 
-        {positionedNodes.map((node) => (
-          <g
-            key={node.id}
-            className={`graph-node ${node.type}`}
-            transform={`translate(${node.x} ${node.y})`}
-          >
-            <circle r={node.type === 'work' ? 42 : 31} />
+        {positionedNodes.map((node) => {
+  const isSelected = selectedObjectId === node.id;
 
-            <text textAnchor="middle" dy="4">
-              {node.label}
-            </text>
-          </g>
-        ))}
+  return (
+    <g
+      key={node.id}
+      className={`graph-node ${node.type} ${
+        isSelected ? 'selected' : ''
+      }`}
+      transform={`translate(${node.x} ${node.y})`}
+      onClick={() => onSelectObject(node.id)}
+      style={{ cursor: 'pointer' }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${node.label} auswählen`}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelectObject(node.id);
+        }
+      }}
+    >
+      <circle
+        r={node.type === 'work' ? 42 : 31}
+        stroke={isSelected ? '#FE5A5D' : undefined}
+        strokeWidth={isSelected ? 4 : undefined}
+      />
+
+      <text textAnchor="middle" dy="4">
+        {node.label}
+      </text>
+    </g>
+  );
+})}
       </svg>
     </section>
   );
