@@ -1,6 +1,10 @@
+import type { BaseObject } from "../engine/models/BaseObject";
 import { graphEdges, graphNodes } from '../data/mock';
 
-export function GraphView() {
+interface GraphViewProps {
+  objects: BaseObject[];
+}
+export function GraphView({ objects }: GraphViewProps) {
   const byId = new Map(graphNodes.map((node) => [node.id, node]));
   return (
     <section className="panel graph-panel">

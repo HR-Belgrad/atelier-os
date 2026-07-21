@@ -128,7 +128,7 @@ export default function App() {
         )}
 
         {active === 'Graph' ? (
-          <GraphView />
+          <GraphView objects={objects} />
         ) : (
           <div className="dashboard-grid">
             <section className="hero panel">
@@ -211,7 +211,7 @@ export default function App() {
               )}
             </section>
 
-            <GraphView />
+            <GraphView objects={objects} />
           </div>
         )}
       </main>
